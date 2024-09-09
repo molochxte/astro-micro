@@ -1,0 +1,106 @@
+---
+title: "Kaomoji App"
+description: "An emoji creation tool"
+date: "03/18/2024"
+demoURL: "
+https://molochxte.github.io/kaomoji-generator/"
+repoURL: "https://molochxte.github.io/kaomoji-generator/"
+---
+
+## Interactive Demo
+I created this tool to generate fun emotes for text messaging! Currently, there are collections of different moods and emotes on dedicated kaomoji websites and apps. I wanted a way to create my own emotes with flexibility and ease, while having a chance to experiment with vanilla JS. Have fun with this tool!  
+
+
+
+## Kaomoji’s are hard to sort through..
+
+![https://kaomoji.ru/en - This site served as an excellent reference for expressions to include in Kaomoji Creator](https://prod-files-secure.s3.us-west-2.amazonaws.com/e26c6993-f13d-46ac-b40d-8e5a18f23a2d/098d8df8-31fd-4114-9d0c-855e17fcb74d/KaomojiSiteReference.gif)
+
+https://kaomoji.ru/en - This site served as an excellent reference for expressions to include in Kaomoji Creator
+
+## So what?
+
+Well, there are plenty of *other* Emoji generators out there!
+
+From uncanny bitmoji’s of ourselves, to remixing existing emojis, and of course we’ve got AI-generated emojis now (see: [Genmoji released on iOS 18](https://emojipedia.org/genmoji)), I think it’s time to popularize text-emotes again with our own flair! 
+
+## Design Process
+
+![Whimsical is my go-to wireframing tool, super quick to spit out a conceptual design.](https://prod-files-secure.s3.us-west-2.amazonaws.com/e26c6993-f13d-46ac-b40d-8e5a18f23a2d/17a51a61-bf91-4f1e-a9bf-57f21f7b2f64/image.png)
+
+Whimsical is my go-to wireframing tool, super quick to spit out a conceptual design.
+
+From this, I was able to break down the necessary components I needed to build:
+
+ **Key Components**
+
+1. A **data structure** for storing and managing kaomoji components.
+2. A **dynamic text display** that updates based on user inputs.
+3. **Tabbed UI** for selecting different face elements.
+
+## 1. Data Structure
+
+![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/e26c6993-f13d-46ac-b40d-8e5a18f23a2d/72880c4c-2a4f-41f4-84c2-2b84a9224455/image.png)
+
+- Using an array allowed me to place face parts (which could be composed of multiple characters to represent one part) in a consistent order.
+- Face parts are categorized into arrays of strings as well. Each category has their own logic for being placed in the template.
+- There are two slots next to each cheek to store an arm/gesture facing towards the left or right. In the example above, the emoji is facing left, so only the left arms [0] and [6] are used.
+
+### **Special Case:** ᐛ
+
+Most parts are separate characters, but because ᐛ combines (eye and mouth) parts it required its own category for “single characters that contain both mouth and eyes”. So when ᐛ is selected, it will clear out the eyes [3] and [5] first, and then populate the mouth slot [4]. Otherwise you end up with something like:
+
+![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/e26c6993-f13d-46ac-b40d-8e5a18f23a2d/346eed47-917f-4a3e-bce5-dac392e304e6/image.png)
+
+4 eyeballs! Which looks a bit odd. 
+
+### **Limitations**
+
+- There are a few expressions that fall outside of this scope.. For example, if the Kaomoji shows someone laying down, or not facing forward.. ∠( ᐛ 」∠)_  it would break the original structure. but since these positions are uncommon, I omitted it for this prototype. In the future, it would make sense to have different face templates for different body positions. Otherwise, if I use the same structure for dynamic positions, it would get confusing to track each limb
+- Later, I want to expand on this to add objects and accessories. Like flipping tables over or holding objects! I could generalize the “ARM” indexes to be useful for additives like these.
+
+ 
+
+## 2. Dynamic Text Display
+
+Kaomoji uses a text area that updates anytime a user wants to change the face.
+
+### Special Case:
+
+An interesting problem I encountered was sometimes the characters would “shift” based on specific unicodes being adjacent to each other.. 
+
+![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/e26c6993-f13d-46ac-b40d-8e5a18f23a2d/d5f6e3ba-3221-4a13-85fc-13fea8b60cf5/image.png)
+
+This seemed true for hiragana and katakana characters next to this ☉ `solar sun` unicode symbol. I did not find other stark differences like this with other combinations. But, If there was a katakana or hiragana character, the next character will shift slightly. 
+
+![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/e26c6993-f13d-46ac-b40d-8e5a18f23a2d/3a260356-5f17-467e-be8c-6297106a406e/image.png)
+
+[ why does this happen? ]
+
+here’s some approaches considered → 
+
+1. Using an invisible spacer character after any katakana / hiragana letters. 
+2. Using a normal space between all characters - └ [  ◕ ヮ ◕  ] ┘ this happens with the randomizer! (arbitrary)
+3. Doing NOTHING - since it is a minor issue. when you paste the kaomoji outside the app, it remains the same. 
+4. Changing the user’s view (fonts) or informing the user about the wonky view 
+
+I decided to add an invisible spacer character to the definition of any characters that caused this issue. 
+
+## 3. Tabbed UI
+
+- One of the initial challenges I faced was implementing tab navigation without relying on pre- made components or the state management conveniences that React offers. I wanted to build it from scratch using vanilla JS, which let me experiment with different ways to manage state and update the UI manually. To be honest, this is still a weak area for me. In my future projects, I want to learn more standard methods to achieve this. But here’s what I ended up doing!
+- I decided to dynamically generate the buttons on page load instead of hard-coding them in HTML, this would give me more flexibility and scalability to add more face parts in an array as I kept building. Each button was linked to a specific category of face parts stored in an array, with the button’s label reflecting the array’s value.
+- Later, I needed visual feedback when a button or tab was actively selected. Also, if the user wanted to randomize the expression, I needed to ensure that the button highlights were reset appropriately. So, I created some standalone functions to clear all hidden/active css class attributes associated with buttons and tabs.. While this worked, it was a bit unconventional
+
+## Next Goals
+
+- Adding save / clipboard history
+- Organizing CSS styling better (tailwind config)
+- Improve edge case handling
+
+That’s all! I’ll continue to update this post with rambles about development. Thanks for reading! 
+
+## Resources
+
+- https://kaomoji.ru/en/
+- https://kaomojihub.com/
